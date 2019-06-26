@@ -25,14 +25,15 @@ export SUITE_OUT= $(BUILD)/$(SUITE_DIR)
 
 include $(SOURCE)/tools/makefiles/toolchain.mk
 
+all: clean mkdir target_cfg gen_linker process_testsuite.db build
 
-all: clean target_cfg gen_linker process_testsuite.db build
+mkdir:
+	mkdir -p $(BUILD)/platform/${TARGET} $(SUITE_OUT) $(BUILD)/val $(BUILD)/partition
 
 #Generate target files from User provided data base
 target_cfg:
 	@echo  ""
 	@echo  "Processing target configuration..."
-	mkdir -p $(BUILD)/platform/${TARGET}/
 	@if [ ! -f "$(SOURCE)/platform/targets/$(TARGET)/target.cfg" ]; then { echo "Error: Target Not Found!!!"; exit 1; } fi
 	python $(SOURCE)/tools/scripts/targetConfigGen.py ${TARGET} $(SOURCE)/val/common/val_target.h \
 	$(SOURCE)/platform/targets/${TARGET}/target.cfg $(BUILD)/platform/${TARGET}/targetConfigGen.c \
@@ -43,10 +44,11 @@ target_cfg:
 
 #Read target.cfg and update the addresses in linker script
 gen_linker:
+ifneq (${TEST_COMBINE_ARCHIVE}, 1)
 	@echo  ""
 	@echo  "Updating linker files..."
-	mkdir -p $(SUITE_OUT)/ $(BUILD)/val/ $(BUILD)/partition/ ;
 	perl $(SOURCE)/tools/scripts/process_test_linker_file.pl $(SOURCE) $(SUITE_OUT) ${TARGET} $(TOOLCHAIN)
+endif
 
 process_testsuite.db:
 	@echo  ""
