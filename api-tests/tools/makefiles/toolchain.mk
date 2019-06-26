@@ -14,7 +14,7 @@
 # * limitations under the License.
 #**/
 
-TOOLCHAIN=GNUARM
+TOOLCHAIN ?= GNUARM
 PREFIX=
 
 #### GNUARM OPTIONS - START ####
@@ -46,6 +46,7 @@ AR_OPTIONS= -rcs
 LINKER_OPTIONS= $(TARGET_SWITCH) -mthumb -Wall -Werror -O0 -fdata-sections \
 				-ffunction-sections -Xlinker --fatal-warnings -Xlinker --gc-sections \
 				-z max-page-size=0x400 -lgcc -lc -lnosys
+HAVE_OBJDUMP=1
 OBJDUMP_OPTIONS= -d
 endif #GNUARM-GCC
 #### GNUARM OPTIONS - END ####
@@ -75,9 +76,30 @@ OBJDUMP=fromelf
 COMPILER_OPTIONS= --target=arm-arm-none-eabi $(TARGET_SWITCH) -Wall -Werror -fshort-enums -fshort-wchar -funsigned-char -fdata-sections -ffunction-sections -mno-unaligned-access -mfpu=none
 AR_OPTIONS= --create -cr
 LINKER_OPTIONS= --strict --map --symbols --xref  --info=summarysizes,sizes,totals,unused,veneers --diag_warning=L6204
+HAVE_OBJDUMP=1
 OBJDUMP_OPTIONS= -c -d --datasymbols
 endif
 #### ARMCLANG OPTIONS - END ####
+
+### ENV OPTIONS - START ####
+ifeq (${TOOLCHAIN}, ENV)
+
+COMPILER := ${CC}
+COMPILER_OPTIONS := ${CFLAGS} -Wall -Werror -Wno-maybe-uninitialized
+
+ASSEMBLER := ${AS}
+ASSEMBLER_OPTIONS := ${ASFLAGS}
+
+LINKER := ${LD}
+LINKER_OPTIONS := ${LDFLAGS}
+
+AR_OPTIONS := ${ARFLAGS}
+
+HAVE_OBJDUMP=0
+
+endif
+### ENV OPTIONS - END ####
+
 
 COMPILER_OPTIONS += -DVERBOSE=$(VERBOSE)
 
@@ -116,4 +138,6 @@ endif
 CC= $(COMPILER) $(COMPILER_OPTIONS) $(CC_OPTIONS) $(USER_INCLUDE) $(INCLUDE)
 AS= $(ASSEMBLER) $(ASSEMBLER_OPTIONS) $(AS_OPTIONS)
 LD= $(LINKER) $(LINKER_OPTIONS)
+ifeq ($(HAVE_OBJDUMP),1)
 DS= $(OBJDUMP) $(OBJDUMP_OPTIONS)
+endif

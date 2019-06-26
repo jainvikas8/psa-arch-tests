@@ -72,9 +72,13 @@ test.elf:
 ifneq (${TEST_COMBINE_ARCHIVE}, 1)
 ifeq (${TOOLCHAIN}, GNUARM)
 	$(LD) -Xlinker -Map=$(SUITE_OUT)/$(TEST)/test.map -o $(SUITE_OUT)/$(TEST)/test.elf -T$(SUITE_OUT)/.test.linker $(SUITE_OUT)/$(TEST)/*_nspe.o
-else
+else ifeq(${TOOLCHAIN}, ARMCLANG)
 	$(LD)  --scatter=$(SUITE_OUT)/.test.sct  --list=$(SUITE_OUT)/$(TEST)/test.map -o $(SUITE_OUT)/$(TEST)/test.elf  $(SUITE_OUT)/$(TEST)/*_nspe.o
+else
+$(error creating test.elf is not supported with the ${TOOLCHAIN} toolchain. Set TEST_COMBINE_ARCHIVE=1 to create a library instead)
 endif # TOOLCHAIN
+ifeq ($(HAVE_OBJDUMP),1)
 	$(DS)  $(SUITE_OUT)/$(TEST)/test.elf >  $(SUITE_OUT)/$(TEST)/test.disass
+endif # HAVE_OBJDUMP
 endif # TEST_COMBINE_ARCHIVE
 

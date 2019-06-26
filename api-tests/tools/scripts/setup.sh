@@ -68,9 +68,20 @@ Arguments Info:
                               ipc, crypto, internal_trusted_storage, protected_storage,
                               and initial_attestation.
     --toolchain <TOOLCHAIN> : Build using the given TOOLCHAIN.
-                              Supported values are GNUARM (GNU Arm Embedded) and ARMCLANG (ARM Compiler 6.x).
+                              Supported values are GNUARM (GNU Arm Embedded), ARMCLANG (ARM Compiler 6.x) and ENV.
+                              When set to ENV, the toolchain is specified using the following environment variables:
+                                1. CC - the C compiler (required)
+                                2. CFLAGS - options for the C compiler (optional)
+                                3. LD - the linker (required)
+                                4. LDFLAGS - options for the linker (optional)
+                                5. AS - the assembler (required)
+                                6. ASFLAGS - options for the assembler (optional)
+                                7. AR - the archiver (required)
+                                8. ARFLAGS - options for the archiver (optional)
+                              environment variables, and is expected to be GCC compatible.
     --cpu_arch <CPU_ARCH>   : Provide cpu arch string as argument.
                               Supported CPU arch are armv8m_ml, armv8m_bl and armv7m.
+                              This option must not be used when using the ENV toolchain.
     --verbose <PRINT_LEVEL> : Print verbosity level
                               Supported print levels are:
                                 1 - INFO & above.
@@ -79,7 +90,8 @@ Arguments Info:
                                 4 - WARN & ERROR.
                                 5 - ERROR.
     --archive_tests         : Create combine test archive(.a) file by combining available test objects files.
-                              Absence of this option would create combine test binary(.bin) by combining available test elfs
+                              Absence of this option would create combine test binary(.bin) by combining available test elfs.
+                              Creating a combined test binary(.bin) is only supported when using the GNUARM and ARMCLANG toolchains.
     --include_panic_tests   : Consider panic tests (mentioned in testsuite.db of respective suite) along with functional tests
                               for building the final executables. Absence of this option would consider only non-panic (ie, functional) tests
     --include <INCLUDE_PATH>: Additional directory to be included into compiler search path. Provide --include <path>
@@ -418,27 +430,54 @@ else
    echo "Using \$TOOLCHAIN=$TOOLCHAIN"
 fi
 
-if [ $TOOLCHAIN != "GNUARM" ] && [ $TOOLCHAIN != "ARMCLANG" ]
+if [ $TOOLCHAIN != "GNUARM" ] && [ $TOOLCHAIN != "ARMCLANG" ] && [ $TOOLCHAIN != "ENV" ]
 then
    echo "Error: Unsupported value for --toolchain=$TOOLCHAIN.
-   Supported toolchain are GNUARM and ARMCLANG"
+   Supported toolchain are GNUARM, ARMCLANG and ENV"
    exit 1
 fi
 
-if [ -z "$CPU_ARCH" ]
+if [ $TOOLCHAIN = "ENV" ]
 then
-   echo "Error: Provide cpu arch string as argument using --cpu_arch <string>"
-   echo "Supported CPU arch are armv8m_ml, armv8m_bl, armv7m"
-   exit 1
+    if [ $TEST_COMBINE_ARCHIVE != "1" ]
+    then
+        echo "Error: Creating a combined test .bin is only supported when toolchain is GNUARM or ARMCLANG."
+        exit 1
+    fi
+
+    for envvar in CC LD AS AR
+    do
+        if [ -z "${!envvar}" ]
+        then
+            echo "Error: environment variable ${envvar} must be set when using the ENV toolchain"
+            exit 1
+        else
+            echo "Using ${envvar}=${!envvar}"
+        fi
+    done
+
+    if [ -n "$CPU_ARCH" ]
+    then
+        echo "Error: Cannot use --cpu_arch when using the ENV toolchain"
+        exit 1
+    fi
 else
-   echo "Using \$CPU_ARCH=$CPU_ARCH"
-fi
+    if [ -z "$CPU_ARCH" ]
+    then
+       echo "Error: Provide cpu arch string as argument using --cpu_arch <string>"
+       echo "Supported CPU arch are armv8m_ml, armv8m_bl, armv7m"
+       exit 1
+    elif [ -n "$CPU_ARCH" ]
+    then
+       echo "Using \$CPU_ARCH=$CPU_ARCH"
+    fi
 
-if [ $CPU_ARCH != "armv8m_ml" ] && [ $CPU_ARCH != "armv8m_bl" ] && [ $CPU_ARCH != "armv7m" ]
-then
-   echo "Error: Unsupported value for --cpu_arch=$CPU_ARCH.
-   Supported CPU arch are armv8m_ml, armv8m_bl, armv7m"
-   exit 1
+    if [ $CPU_ARCH != "armv8m_ml" ] && [ $CPU_ARCH != "armv8m_bl" ] && [ $CPU_ARCH != "armv7m" ]
+    then
+       echo "Error: Unsupported value for --cpu_arch=$CPU_ARCH.
+       Supported CPU arch are armv8m_ml, armv8m_bl, armv7m"
+       exit 1
+    fi
 fi
 
 if [ ! -z "$VERBOSE" ]
