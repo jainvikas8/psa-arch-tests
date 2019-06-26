@@ -20,8 +20,11 @@
 
 #include "val.h"
 
-#define ELF_IDENT                      16
 #define VAL_INVALID_TEST_ID            0xffffffff
+
+#if (TEST_COMBINE_ARCHIVE == 0)
+
+#define ELF_IDENT                      16
 #define VAL_TEST_START_MARKER          0xfaceface
 #define VAL_TEST_END_MARKER            0xc3c3c3c3
 
@@ -65,6 +68,7 @@ typedef struct {
     test_id_t test_id;
     uint32_t  elf_size;
 } test_header_t;
+#endif /* TEST_COMBINE_ARCHIVE */
 
 void val_dispatcher(test_id_t);
 #endif

@@ -26,6 +26,8 @@ extern psa_api_t psa_api;
 
 /* gloabls */
 addr_t          g_test_info_addr;
+
+#if (TEST_COMBINE_ARCHIVE == 0)
 uint32_t        combine_test_binary_in_ram;
 addr_t          combine_test_binary_addr;
 
@@ -116,6 +118,7 @@ int val_copy_elf(uint32_t saddr, uint32_t *info_addr)
     *info_addr = test_elfh.e_entry;
     return 0;
 }
+#endif /* TEST_COMBINE_ARCHIVE */
 
 /**
     @brief        - This function reads the test ELFs from RAM or secondary storage and loads into
@@ -333,8 +336,10 @@ void val_dispatcher(test_id_t test_id_prev)
         return;
     }
 
+#if (TEST_COMBINE_ARCHIVE == 0)
     combine_test_binary_addr   = misc_desc->ns_start_addr_of_combine_test_binary;
     combine_test_binary_in_ram = misc_desc->combine_test_binary_in_ram;
+#endif /* TEST_COMBINE_ARCHIVE */
     do
     {
         status = val_get_boot_flag(&boot.state);
