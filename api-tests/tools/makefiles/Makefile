@@ -39,7 +39,7 @@ target_cfg:
 	$(BUILD)/platform/${TARGET}/target_database.h target_database ""
 	gcc -D__addr_t_defined -DTARGET_CFG_BUILD $(BUILD)/platform/${TARGET}/targetConfigGen.c -o $(BUILD)/platform/${TARGET}/targetConfigGen \
 	-I$(SOURCE)/val/nspe -I$(SOURCE)/val/common -I$(SOURCE)/platform/targets/${TARGET}/nspe/common
-	./$(BUILD)/platform/${TARGET}/targetConfigGen
+	$(BUILD)/platform/${TARGET}/targetConfigGen
 
 #Read target.cfg and update the addresses in linker script
 gen_linker:
