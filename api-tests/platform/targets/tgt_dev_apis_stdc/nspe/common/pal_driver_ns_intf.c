@@ -205,5 +205,5 @@ int pal_spi_read(addr_t addr, uint8_t *data, uint32_t len)
 **/
 void pal_terminate_simulation(void)
 {
-    exit(0);
+    ;
 }

@@ -314,9 +314,9 @@ char * val_get_comp_name(test_id_t test_id)
     @brief    - This function is responsible for setting up VAL infrastructure.
                 Loads test one by one from combine binary and calls test_entry
                 function of each test image.
-    @return   - none
+    @return   - 0 if success Or error code for the failure.
 **/
-void val_dispatcher(test_id_t test_id_prev)
+int32_t val_dispatcher(test_id_t test_id_prev)
 {
 
     test_id_t            test_id;
@@ -333,7 +333,7 @@ void val_dispatcher(test_id_t test_id_prev)
     if (VAL_ERROR(status))
     {
         val_print(PRINT_ERROR, "\n\ttarget config read failed", 0);
-        return;
+        return status;
     }
 
 #if (TEST_COMBINE_ARCHIVE == 0)
@@ -345,7 +345,7 @@ void val_dispatcher(test_id_t test_id_prev)
         status = val_get_boot_flag(&boot.state);
         if (VAL_ERROR(status))
         {
-            return;
+            return status;
         }
 
         /* Did last run test hang and system re-booted due to watchdog timeout and
@@ -359,7 +359,7 @@ void val_dispatcher(test_id_t test_id_prev)
             if (VAL_ERROR(status))
             {
                 val_print(PRINT_ERROR, "\n\tNVMEM read error", 0);
-                return;
+                return status;
             }
         }
         /* Did last run test hang and system reset due to watchdog timeout but
@@ -375,7 +375,7 @@ void val_dispatcher(test_id_t test_id_prev)
             if (VAL_ERROR(status))
             {
                 val_print(PRINT_ERROR, "\n\tNVMEM read error", 0);
-                return;
+                return status;
             }
         }
         else
@@ -384,7 +384,7 @@ void val_dispatcher(test_id_t test_id_prev)
 
             if (VAL_ERROR(status))
             {
-                return;
+                return status;
             }
             else if (test_id == VAL_INVALID_TEST_ID)
             {
@@ -396,7 +396,7 @@ void val_dispatcher(test_id_t test_id_prev)
             if (VAL_ERROR(status))
             {
                 val_print(PRINT_ERROR, "\n\tNVMEM write error", 0);
-                return;
+                return status;
             }
 
             if (VAL_GET_COMP_NUM(test_id_prev) != VAL_GET_COMP_NUM(test_id))
@@ -412,7 +412,7 @@ void val_dispatcher(test_id_t test_id_prev)
                 status = val_set_boot_flag(BOOT_NOT_EXPECTED);
                 if (VAL_ERROR(status))
                 {
-                    return;
+                    return status;
                 }
             }
             val_execute_test_fn();
@@ -424,7 +424,7 @@ void val_dispatcher(test_id_t test_id_prev)
         status = val_set_boot_flag(BOOT_UNKNOWN);
         if (VAL_ERROR(status))
         {
-            return;
+            return status;
         }
 
         /* Prepare suite summary data structure */
@@ -432,7 +432,7 @@ void val_dispatcher(test_id_t test_id_prev)
         if (VAL_ERROR(status))
         {
             val_print(PRINT_ERROR, "\n\tNVMEM read error", 0);
-            return;
+            return status;
         }
 
         switch (test_result)
@@ -455,7 +455,7 @@ void val_dispatcher(test_id_t test_id_prev)
         if (VAL_ERROR(status))
         {
             val_print(PRINT_ERROR, "\n\tNVMEM write error", 0);
-            return;
+            return status;
         }
 
         test_id_prev = test_id;
@@ -464,7 +464,7 @@ void val_dispatcher(test_id_t test_id_prev)
         if (VAL_ERROR(status))
         {
             val_print(PRINT_ERROR, "\n\tNVMEM write error", 0);
-            return;
+            return status;
         }
 
    } while(1);
@@ -473,7 +473,7 @@ void val_dispatcher(test_id_t test_id_prev)
    if (VAL_ERROR(status))
    {
        val_print(PRINT_ERROR, "\n\tNVMEM read error", 0);
-       return;
+       return status;
    }
 
    val_print(PRINT_ALWAYS, "\n************ ", 0);
@@ -486,6 +486,8 @@ void val_dispatcher(test_id_t test_id_prev)
    val_print(PRINT_ALWAYS, "TOTAL FAILED    : %d\n", test_count.fail_cnt);
    val_print(PRINT_ALWAYS, "TOTAL SKIPPED   : %d\n", test_count.skip_cnt);
    val_print(PRINT_ALWAYS, "******************************************\n", 0);
+
+   return (test_count.fail_cnt > 0) ? VAL_STATUS_TEST_FAILED : VAL_STATUS_SUCCESS ;
 }
 
 

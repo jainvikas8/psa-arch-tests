@@ -70,5 +70,5 @@ typedef struct {
 } test_header_t;
 #endif /* TEST_COMBINE_ARCHIVE */
 
-void val_dispatcher(test_id_t);
+int32_t val_dispatcher(test_id_t);
 #endif
